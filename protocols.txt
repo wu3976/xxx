@@ -1,0 +1,52 @@
+1. Send a message. 
+WebSocket Send
+{
+    type: "sendMessage",
+    corrId: String          --a client generated unique corr id
+    authToken: String       --authentication token
+    payload: {
+        receiver: String    --receiver uid
+        message: String     --message to send
+    }
+}
+
+2. Receive a message.
+WebSocket Recv
+{
+    type: "recvMessage",
+    payload: {
+        sender: String      --sender id of the message
+        message: String     --message
+    }
+}
+
+3. Receive message sending status
+WebSocket Recv
+{
+    type: "sendMessageStatus"
+    corrId: String          --the corr id of corresponding message
+    status: String          --"success"|"unauthorized"|"notfriend"
+}
+
+4. Initiate sending a file
+WebSocket Send
+{
+    type: "sendFile",
+    corrId: String,         --a client generated unique corr id
+    authToken: String,      --authentication token
+    payload: {
+        receiver: String    --receiver uid
+        fileName: String    --the name of the file, including ext. This will not be the uid of file stored in S3
+    }
+}
+
+5. Receive a file link
+
+
+6. Receive file sending initiation status
+WebSocket Recv 
+{
+    type: "sendFileStatus",
+    corrId: String,         --the corr id of corresponding file sending initiation
+    status: String          --"success"|"unauthorized"|"notfriend"
+}

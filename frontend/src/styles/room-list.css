@@ -1,0 +1,157 @@
+/* Page background */
+.page {
+    min-height: 100vh;
+    padding: 24px;
+    background: #020617;
+    /* dark */
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+/* Card container */
+.room-list {
+    width: 100%;
+    max-width: 900px;
+    background: #0f172a;
+    border-radius: 16px;
+    padding: 20px 20px 14px;
+    color: #e5e7eb;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+    border: 1px solid #1f2937;
+}
+
+/* Header */
+.room-list__header h2 {
+    margin: 0;
+    font-size: 1.4rem;
+    font-weight: 600;
+}
+
+.room-list__header p {
+    margin: 4px 0 12px;
+    font-size: 0.9rem;
+    color: #9ca3af;
+}
+
+/* Table layout */
+.room-list__table {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-top: 8px;
+}
+
+/* Row */
+.room-list__row {
+    display: grid;
+    grid-template-columns: 2.3fr 1.2fr 1.2fr 1.2fr 0.9fr;
+    gap: 8px;
+    align-items: center;
+    padding: 8px 10px;
+    border-radius: 10px;
+    background: #020617;
+    transition: background 0.15s ease, transform 0.05s ease, box-shadow 0.15s ease;
+}
+
+/* Header row */
+.room-list__row--head {
+    background: transparent;
+    border-radius: 0;
+    padding: 4px 4px 8px;
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    color: #9ca3af;
+    letter-spacing: 0.06em;
+    border-bottom: 1px solid #1f2937;
+}
+
+.room-list__row:not(.room-list__row--head):hover {
+    background: #030712;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(15, 23, 42, 0.6);
+}
+
+/* Cells */
+.cell {
+    font-size: 0.9rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.cell--name {
+    font-weight: 500;
+}
+
+.cell--action {
+    text-align: right;
+}
+
+/* Pills */
+.pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2px 8px;
+    border-radius: 9999px;
+    font-size: 0.7rem;
+    background: #111827;
+    color: #9ca3af;
+}
+
+.pill--empty::before {
+    content: "●";
+    font-size: 0.7rem;
+    margin-right: 4px;
+    color: #4b5563;
+}
+
+/* Join button */
+.btn-join {
+    border: none;
+    border-radius: 9999px;
+    padding: 6px 14px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    background: #22c55e;
+    color: #022c22;
+    cursor: pointer;
+    transition: background 0.15s ease, transform 0.05s ease, box-shadow 0.15s ease;
+    box-shadow: 0 4px 10px rgba(34, 197, 94, 0.4);
+}
+
+.btn-join:hover {
+    background: #16a34a;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 14px rgba(34, 197, 94, 0.6);
+}
+
+.btn-join:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 8px rgba(34, 197, 94, 0.5);
+}
+
+/* Footer */
+.room-list__footer {
+    margin-top: 10px;
+    font-size: 0.8rem;
+    color: #6b7280;
+    display: flex;
+    justify-content: flex-end;
+}
+
+/* Mobile */
+@media (max-width: 720px) {
+    .room-list__row {
+        grid-template-columns: 2.3fr 1.2fr 1.2fr 0fr 0.9fr;
+    }
+
+    .room-list__row .cell:nth-child(4),
+    .room-list__row--head .cell:nth-child(4) {
+        display: none;
+        /* hide Player 2 on small screens */
+    }
+}

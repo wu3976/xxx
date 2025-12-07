@@ -1,0 +1,5 @@
+export const LISTROOMS_API_ROUTE = "/rooms"
+export const GETROOM_API_ROUTE = "/room"
+export const GETUSER_API_ROUTE = "/user"
+export const GETUSERBYUSERNAME_API_ROUTE = "/user/byusername"
+export const CREATEUSER_API_ROUTE = "/user"

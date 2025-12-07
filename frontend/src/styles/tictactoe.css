@@ -1,0 +1,383 @@
+.ttt-page {
+    min-height: 100vh;
+    padding: 24px;
+    background: #020617;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    color: #e5e7eb;
+}
+
+.ttt-card {
+    width: 100%;
+    max-width: 1100px;
+    min-height: 520px;
+    background: #0b1220;
+    border-radius: 18px;
+    border: 1px solid #1f2937;
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.7);
+    display: grid;
+    grid-template-columns: 3fr 2fr;
+    overflow: hidden;
+}
+
+/* LEFT */
+.ttt-left {
+    padding: 18px;
+    display: flex;
+    flex-direction: column;
+}
+
+.ttt-players {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.ttt-player {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    border-radius: 14px;
+    padding: 8px 10px;
+    background: #020617;
+    border: 1px solid #1f2937;
+}
+
+.ttt-player--current {
+    border-color: #22c55e;
+    box-shadow: 0 0 0 1px rgba(34, 197, 94, 0.35);
+}
+
+.ttt-avatar {
+    width: 34px;
+    height: 34px;
+    border-radius: 999px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #1d4ed8;
+    color: #e5e7eb;
+    font-weight: 600;
+    margin-right: 8px;
+    font-size: 0.95rem;
+}
+
+.ttt-avatar--secondary {
+    background: #7c3aed;
+}
+
+.ttt-player-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.ttt-player-name {
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.ttt-player-mark {
+    font-size: 0.8rem;
+    color: #9ca3af;
+}
+
+.ttt-player-sub {
+    font-size: 0.75rem;
+    color: #9ca3af;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+/* status dots */
+.dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 999px;
+}
+
+.dot--online {
+    background: #22c55e;
+}
+
+.dot--offline {
+    background: #6b7280;
+}
+
+/* Status row */
+.ttt-status {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 14px;
+    font-size: 0.85rem;
+    color: #9ca3af;
+}
+
+.ttt-status .label {
+    text-transform: uppercase;
+    font-size: 0.7rem;
+    letter-spacing: 0.08em;
+    color: #6b7280;
+}
+
+.ttt-status .value {
+    margin-left: 4px;
+    color: #e5e7eb;
+}
+
+/* Board */
+.ttt-board {
+    flex: 1;
+    margin-top: 4px;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-rows: repeat(3, minmax(0, 1fr));
+    gap: 6px;
+    padding: 6px;
+    background: #020617;
+    border-radius: 16px;
+    border: 1px solid #1f2937;
+}
+
+.ttt-cell {
+    background: #020617;
+    border-radius: 12px;
+    border: 1px solid #111827;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background 0.15s ease, transform 0.05s ease,
+        box-shadow 0.15s ease;
+}
+
+.ttt-cell:hover {
+    background: #030712;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.8);
+}
+
+.ttt-cell span {
+    font-size: 2.2rem;
+    font-weight: 700;
+}
+
+.mark-x {
+    color: #22c55e;
+}
+
+.mark-o {
+    color: #f97316;
+}
+
+/* Footer hint */
+.ttt-footer {
+    margin-top: 10px;
+    font-size: 0.8rem;
+    color: #9ca3af;
+}
+
+/* RIGHT */
+.ttt-right {
+    padding: 18px;
+    background: #020617;
+    border-left: 1px solid #1f2937;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+/* OpponentStatus */
+.ttt-connection {
+    border-radius: 14px;
+    border: 1px solid #1f2937;
+    background: #020617;
+    padding: 10px 12px;
+}
+
+.ttt-connection-header {
+    font-size: 0.83rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: #6b7280;
+    margin-bottom: 6px;
+}
+
+.ttt-connection-body {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.status-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.78rem;
+    border-radius: 999px;
+    padding: 4px 10px;
+    font-weight: 500;
+}
+
+.status-pill--online {
+    background: rgba(22, 163, 74, 0.12);
+    color: #bbf7d0;
+}
+
+.status-pill--offline {
+    background: rgba(127, 29, 29, 0.2);
+    color: #fecaca;
+}
+
+.dot--in-pill {
+    width: 7px;
+    height: 7px;
+    border-radius: 999px;
+    background: currentColor;
+}
+
+.ttt-connection-text {
+    font-size: 0.78rem;
+    color: #9ca3af;
+    margin: 2px 0 0;
+}
+
+/* ChatPanel */
+.ttt-chat {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    border-radius: 14px;
+    border: 1px solid #1f2937;
+    background: #020617;
+    overflow: hidden;
+}
+
+.ttt-chat-header {
+    padding: 10px 12px 8px;
+    border-bottom: 1px solid #1f2937;
+}
+
+.ttt-chat-title {
+    font-size: 0.95rem;
+    font-weight: 500;
+}
+
+.ttt-chat-subtitle {
+    font-size: 0.78rem;
+    color: #9ca3af;
+}
+
+.ttt-chat-messages {
+    flex: 1;
+    padding: 10px 10px 8px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.ttt-message {
+    max-width: 80%;
+    font-size: 0.85rem;
+}
+
+.ttt-message--me {
+    align-self: flex-end;
+    text-align: right;
+}
+
+.ttt-message--opponent {
+    align-self: flex-start;
+}
+
+.ttt-message-meta {
+    display: flex;
+    gap: 6px;
+    font-size: 0.7rem;
+    color: #9ca3af;
+    margin-bottom: 2px;
+}
+
+.ttt-message--me .ttt-message-meta {
+    justify-content: flex-end;
+}
+
+.ttt-message-bubble {
+    display: inline-block;
+    padding: 6px 10px;
+    border-radius: 999px 999px 4px 999px;
+    background: #1d4ed8;
+    color: #e5e7eb;
+}
+
+.ttt-message--opponent .ttt-message-bubble {
+    border-radius: 999px 999px 999px 4px;
+    background: #111827;
+}
+
+.ttt-chat-input {
+    border-top: 1px solid #1f2937;
+    padding: 8px;
+    display: flex;
+    gap: 6px;
+}
+
+.ttt-chat-input input {
+    flex: 1;
+    border-radius: 999px;
+    border: 1px solid #374151;
+    background: #020617;
+    color: #e5e7eb;
+    padding: 6px 10px;
+    font-size: 0.85rem;
+    outline: none;
+}
+
+.ttt-chat-input input::placeholder {
+    color: #6b7280;
+}
+
+.ttt-chat-input input:focus {
+    border-color: #2563eb;
+    box-shadow: 0 0 0 1px rgba(37, 99, 235, 0.45);
+}
+
+.btn-send {
+    border-radius: 999px;
+    border: none;
+    padding: 6px 12px;
+    font-size: 0.82rem;
+    font-weight: 500;
+    background: #2563eb;
+    color: white;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.6);
+    transition: background 0.15s ease, transform 0.05s ease;
+}
+
+.btn-send:hover {
+    background: #1d4ed8;
+    transform: translateY(-1px);
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+    .ttt-card {
+        grid-template-columns: 1fr;
+        max-width: 640px;
+    }
+
+    .ttt-right {
+        border-left: none;
+        border-top: 1px solid #1f2937;
+    }
+
+    .ttt-page {
+        align-items: flex-start;
+    }
+}

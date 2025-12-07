@@ -1,0 +1,82 @@
+/* Make the entire page dark */
+body {
+    background-color: #020617;
+    margin: 0;
+    font-family: system-ui, sans-serif;
+    color: #e6e6e6;
+}
+
+/* Full-page centered layout */
+.page-container {
+    height: 100vh;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Form box */
+.form-container {
+    width: 320px;
+    padding: 24px;
+
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+
+    background-color: #1e1e1e;
+    border: 1px solid #333;
+    border-radius: 12px;
+    text-align: center;
+
+    box-shadow: 0 4px 25px rgba(0, 0, 0, 0.4);
+}
+
+/* Input */
+.form-input {
+    padding: 12px;
+    font-size: 16px;
+    border-radius: 6px;
+    border: 1px solid #444;
+    background-color: #2b2b2b;
+    color: #fff;
+    transition: border-color 0.2s ease, background-color 0.2s ease;
+}
+
+.form-input::placeholder {
+    color: #888;
+}
+
+.form-input:focus {
+    outline: none;
+    border-color: #4da3ff;
+    background-color: #262626;
+}
+
+/* Button */
+.form-button {
+    padding: 12px;
+    font-size: 16px;
+
+    border-radius: 6px;
+    background-color: #006edc;
+    color: white;
+    border: none;
+
+    cursor: pointer;
+    transition: background-color 0.25s ease, transform 0.1s ease;
+}
+
+.form-button:hover {
+    background-color: #005bb5;
+}
+
+.form-button:active {
+    transform: scale(0.97);
+}
+
+.error-area {
+    height: 1rem;
+    font-size: .8rem;
+    color: rgb(232, 91, 91);
+}
