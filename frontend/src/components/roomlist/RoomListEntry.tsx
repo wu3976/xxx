@@ -6,6 +6,19 @@ import { ROOM_ROUTE, SIGNUP_ROUTE } from "../../routeConfig";
 export default function RoomListEntry({ room }: { room: RoomData }) {
     const navigate = useNavigate();
 
+    const handleJoinRoom = async () => {
+        const username = Cookies.get("username");
+        const userid = Cookies.get("userid");
+        if (!username || !userid) {
+            alert("please sign up before joining a room");
+            navigate(SIGNUP_ROUTE);
+            return;
+        }
+
+        // Just navigate to the room - player will join from the game room UI
+        navigate(`${ROOM_ROUTE}/${room.id}`);
+    };
+
     return <div key={room.id} className="room-list__row">
         <div className="cell cell--name" title={room.name}>
             {room.name}
@@ -28,16 +41,7 @@ export default function RoomListEntry({ room }: { room: RoomData }) {
         <div className="cell cell--action">
             <button
                 className="btn-join"
-                onClick={async () => {
-                    const username = Cookies.get("username");
-                    const userid = Cookies.get("userid");
-                    if (!username || !userid) {
-                        alert("please sign up before joining a room");
-                        navigate(SIGNUP_ROUTE);
-                        return;
-                    }
-                    navigate(`${ROOM_ROUTE}/${room.id}`);
-                }}
+                onClick={handleJoinRoom}
             >
                 Join
             </button>

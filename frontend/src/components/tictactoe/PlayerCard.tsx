@@ -22,6 +22,7 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({ player, highlight, click
                 className={
                     "ttt-player" + (highlight ? " ttt-player--current" : "")
                 }
+                onClick={clickHandler}
             >
                 <div className="ttt-player-info">
                     click to join

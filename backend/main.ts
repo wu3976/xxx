@@ -12,6 +12,7 @@ import { roomRouter } from "./routes/roomrouter.ts";
 import { authorizationMiddleware } from "./middlewares/auth.ts";
 import { loggerMiddleware } from "./middlewares/utils.ts";
 import { userrouter } from "./routes/userrouter.ts";
+import { setupRoomHandlers } from "./wsroutes/index.ts";
 
 // check if env variables are correctly set
 checkEnvVars();
@@ -54,6 +55,14 @@ const io = new SocketIOServer(server, {
 io.on('connection', (socket) => {
     console.log(`Client connected: ${socket.id}`);
 
+    // Initialize socket data
+    socket.data.roomId = null;
+    socket.data.userId = null;
+    socket.data.playerSlot = null;
+
+    // Setup room handlers
+    setupRoomHandlers(socket, io);
+
     socket.on('chat:message', (msg) => {
         console.log('Received:', msg);
         io.emit('chat:message', msg);
@@ -66,10 +75,4 @@ io.on('connection', (socket) => {
 
 server.listen(SERVER_PORT, async () => {
     console.log(`Server running at http://localhost:${SERVER_PORT}`);
-    // let user = await createUser("user1", "aaaa");
-    // let user2 = await createUser("user2", "aaaa");
-    // let user3 = await createUser("user3", "aaaa");
-    // let room = await createTTTGameRoom("room1", user.id);
-    // let room2 = await createTTTGameRoom("room2", user2.id);
-    // let room3 = await createTTTGameRoom("room3", user3.id);
 });

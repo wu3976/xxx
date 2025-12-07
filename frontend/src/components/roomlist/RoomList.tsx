@@ -1,9 +1,10 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import "../../styles/room-list.css";
 import type { RoomData } from "../../types/roomListTypes";
 import RoomListEntry from "./RoomListEntry";
 import { SERVER_URL } from "../../config";
 import { LISTROOMS_API_ROUTE } from "../../apiRouteConfig";
+import useRoomSocket from "../../hooks/useRoomSocket";
 
 const mockRooms: RoomData[] = [
     {
@@ -38,37 +39,64 @@ const mockRooms: RoomData[] = [
 
 const useRoomDatas = (): [RoomData[], React.Dispatch<React.SetStateAction<RoomData[]>>] => {
     let [roomListDatas, setRoomListDatas] = useState<RoomData[]>([]);
+    const { socket, state: socketState, onRoomUpdate } = useRoomSocket();
 
-    useEffect(() => {
+    const fetchRooms = useCallback(() => {
         fetch(`${SERVER_URL}${LISTROOMS_API_ROUTE}?skip=0&limit=-1&oldestFirst=true`)
-        .then(resp => resp.json())
-        .then(data => {
-            if (data?.type === "error") {
-                alert(`error: ${data.data}`)
-            } else if (data?.type === "data") {
-                setRoomListDatas(data.data.map((ele: any) => ({
-                    ...ele,
-                    creator: ele.creater,
-                    creater: undefined
-                })));
-            } else {
-                alert("Unexpected Error");
-            }
-        })
+            .then(resp => resp.json())
+            .then(data => {
+                if (data?.type === "error") {
+                    console.error(`error: ${data.data}`)
+                } else if (data?.type === "data") {
+                    setRoomListDatas(data.data.map((ele: any) => ({
+                        ...ele,
+                        creator: ele.creater,
+                        creater: undefined
+                    })));
+                } else {
+                    console.error("Unexpected Error");
+                }
+            })
+            .catch(err => console.error("Failed to fetch rooms:", err));
     }, []);
+
+    // Initial fetch
+    useEffect(() => {
+        fetchRooms();
+    }, [fetchRooms]);
+
+    // Listen for room updates via WebSocket
+    useEffect(() => {
+        if (!socket) return;
+
+        const unsubscribe = onRoomUpdate((data: any) => {
+            console.log('Room list update received:', data);
+            // Refresh room list when any room is updated
+            fetchRooms();
+        });
+
+        return unsubscribe;
+    }, [socket, onRoomUpdate, fetchRooms]);
 
     return [roomListDatas, setRoomListDatas];
 }
 
 const RoomList: React.FC = () => {
     const [roomListDatas, setRoomListDatas] = useRoomDatas();
+    const { state: socketState } = useRoomSocket();
 
     return (
         <div className="page">
+            {socketState.error && (
+                <div style={{ padding: '10px', backgroundColor: '#ffe6e6', color: '#d32f2f', borderRadius: '4px', marginBottom: '10px' }}>
+                    Error: {socketState.error}
+                </div>
+            )}
             <div className="room-list">
                 <div className="room-list__header">
                     <h2>Available Rooms</h2>
                     <p>Pick a room to join a game.</p>
+                    {!socketState.isConnected && <p style={{ color: '#999' }}>Connecting to server...</p>}
                 </div>
 
                 <div className="room-list__table">
