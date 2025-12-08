@@ -4,6 +4,8 @@ import type { RoomData } from "../../types/roomListTypes";
 import RoomListEntry from "./RoomListEntry";
 import { SERVER_URL } from "../../config";
 import { LISTROOMS_API_ROUTE } from "../../apiRouteConfig";
+import { CREATEROOM_ROUTE } from "../../routeConfig";
+import { useNavigate } from "react-router-dom";
 import useRoomSocket from "../../hooks/useRoomSocket";
 
 const mockRooms: RoomData[] = [
@@ -51,7 +53,9 @@ const useRoomDatas = (): [RoomData[], React.Dispatch<React.SetStateAction<RoomDa
                     setRoomListDatas(data.data.map((ele: any) => ({
                         ...ele,
                         creator: ele.creater,
-                        creater: undefined
+                        creatorId: ele.createrId,
+                        creater: undefined,
+                        createrId: undefined
                     })));
                 } else {
                     console.error("Unexpected Error");
@@ -63,6 +67,12 @@ const useRoomDatas = (): [RoomData[], React.Dispatch<React.SetStateAction<RoomDa
     // Initial fetch
     useEffect(() => {
         fetchRooms();
+        const interval = setInterval(() => {
+            fetchRooms();
+        }, 8000);
+        return () => {
+            clearInterval(interval);
+        }
     }, [fetchRooms]);
 
     // Listen for room updates via WebSocket
@@ -84,6 +94,7 @@ const useRoomDatas = (): [RoomData[], React.Dispatch<React.SetStateAction<RoomDa
 const RoomList: React.FC = () => {
     const [roomListDatas, setRoomListDatas] = useRoomDatas();
     const { state: socketState } = useRoomSocket();
+    const navigate = useNavigate();
 
     return (
         <div className="page">
@@ -94,9 +105,38 @@ const RoomList: React.FC = () => {
             )}
             <div className="room-list">
                 <div className="room-list__header">
-                    <h2>Available Rooms</h2>
-                    <p>Pick a room to join a game.</p>
-                    {!socketState.isConnected && <p style={{ color: '#999' }}>Connecting to server...</p>}
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '20px' }}>
+                        <div>
+                            <h2>Available Rooms</h2>
+                            <p>Pick a room to join a game.</p>
+                            {!socketState.isConnected && <p style={{ color: '#999' }}>Connecting to server...</p>}
+                        </div>
+                        <button
+                            onClick={() => navigate(CREATEROOM_ROUTE)}
+                            style={{
+                                padding: '10px 20px',
+                                backgroundColor: '#4CAF50',
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: '6px',
+                                fontSize: '14px',
+                                fontWeight: '600',
+                                cursor: 'pointer',
+                                whiteSpace: 'nowrap',
+                                transition: 'all 0.3s ease',
+                            }}
+                            onMouseEnter={(e) => {
+                                e.currentTarget.style.backgroundColor = '#45a049';
+                                e.currentTarget.style.transform = 'translateY(-2px)';
+                            }}
+                            onMouseLeave={(e) => {
+                                e.currentTarget.style.backgroundColor = '#4CAF50';
+                                e.currentTarget.style.transform = 'translateY(0)';
+                            }}
+                        >
+                            + Create Room
+                        </button>
+                    </div>
                 </div>
 
                 <div className="room-list__table">

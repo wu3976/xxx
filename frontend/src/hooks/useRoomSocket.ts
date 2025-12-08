@@ -278,6 +278,50 @@ export function useRoomSocket() {
         []
     );
 
+    /**
+     * Listen for chat messages
+     */
+    const onChatMessage = useCallback(
+        (callback: (data: any) => void) => {
+            if (!socketRef.current) return;
+
+            socketRef.current.on('room:chat:message', callback);
+
+            return () => {
+                socketRef.current?.off('room:chat:message', callback);
+            };
+        },
+        []
+    );
+
+    /**
+     * Send a chat message
+     */
+    const sendChatMessage = useCallback(
+        async (roomId: string, userId: string, username: string, text: string): Promise<boolean> => {
+            return new Promise((resolve) => {
+                if (!socketRef.current?.connected) {
+                    console.error('[CHAT] Socket not connected');
+                    resolve(false);
+                    return;
+                }
+
+                console.log('[CHAT] Sending message:', { roomId, userId, username, text });
+
+                socketRef.current?.emit('room:chat:send', { roomId, userId, username, text }, (response: any) => {
+                    if (response?.success) {
+                        console.log('[CHAT] Message sent successfully');
+                        resolve(true);
+                    } else {
+                        console.error('[CHAT] Failed to send message:', response?.error);
+                        resolve(false);
+                    }
+                });
+            });
+        },
+        []
+    );
+
     return {
         socket: socketRef.current,
         state,
@@ -287,6 +331,8 @@ export function useRoomSocket() {
         subscribeToRoom,
         unsubscribeFromRoom,
         onRoomUpdate,
+        onChatMessage,
+        sendChatMessage,
     };
 }
 

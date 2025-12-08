@@ -1,8 +1,13 @@
 import express from "express";
-import { createTTTUser, getUserInfo, getUserInfoByUsername } from "../midlayer/userActions.ts";
+import { createTTTUser, getUserInfo, getUserInfoByUsername, getAllTTTUsers } from "../midlayer/userActions.ts";
 import { constructRouterJsonResp } from "../utils.ts";
 
 export const userrouter = express.Router();
+
+userrouter.get("/users", async (req, resp) => {
+    const users = await getAllTTTUsers();
+    resp.json(constructRouterJsonResp("data", users));
+})
 
 userrouter.get("/user/:id", async (req, resp) => {
     const { id } = req.params;

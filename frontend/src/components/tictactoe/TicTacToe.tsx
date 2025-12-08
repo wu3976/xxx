@@ -6,7 +6,7 @@ import { OpponentStatus } from "./OpponentStatus";
 import { ChatPanel } from "./ChatPanel";
 import { useParams } from "react-router-dom";
 import { SERVER_URL } from "../../config";
-import { GETROOM_API_ROUTE, GETUSER_API_ROUTE } from "../../apiRouteConfig";
+import { GETROOM_API_ROUTE, GETUSER_API_ROUTE, REPLAYROOM_API_ROUTE } from "../../apiRouteConfig";
 import type { TttData } from "../../types/ticTacToeTypes";
 import { constructDefaultTTTData } from "../../utils/tttUtils";
 import { shouldBoardBeDisabled, checkGameStatus } from "../../utils/gameLogic";
@@ -75,6 +75,8 @@ export const TicTacToe: React.FC = () => {
         subscribeToRoom, 
         unsubscribeFromRoom,
         onRoomUpdate,
+        onChatMessage,
+        sendChatMessage,
         state: socketState 
     } = useRoomSocket();
     
@@ -82,6 +84,7 @@ export const TicTacToe: React.FC = () => {
     const [isPlayerJoined, setIsPlayerJoined] = useState(false);
     const [currentPlayerSlot, setCurrentPlayerSlot] = useState<'player1' | 'player2' | null>(null);
     const [isJoining, setIsJoining] = useState(false);
+    const [chatMessages, setChatMessages] = useState<any[]>([]);
 
     // Initial room data fetch via HTTP
     useEffect(() => {
@@ -321,6 +324,63 @@ export const TicTacToe: React.FC = () => {
         return unsubscribe;
     }, [roomId, onRoomUpdate]);
 
+    // Listen for chat messages
+    useEffect(() => {
+        if (!roomId) return;
+
+        const unsubscribe = onChatMessage((data: any) => {
+            console.log('[CHAT] Message received:', data);
+            if (data.success) {
+                const { userId, username, text, time } = data.data;
+                setChatMessages(prev => [...prev, {
+                    id: `${Date.now()}-${userId}`,
+                    userId,
+                    username,
+                    text,
+                    time
+                }]);
+            }
+        });
+
+        return unsubscribe;
+    }, [roomId, onChatMessage]);
+
+    // Handle chat message send
+    const handleSendChatMessage = async (text: string) => {
+        if (!roomId || !socketState.isConnected) {
+            console.error('[CHAT] Socket not connected');
+            alert('Not connected to server');
+            return;
+        }
+
+        const userId = Cookies.get("userid");
+        if (!userId) {
+            console.error('[CHAT] No user ID');
+            alert('User not logged in');
+            return;
+        }
+
+        // Get current user's username from tttstate
+        let currentUsername = '';
+        if (currentPlayerSlot === 'player1' && tttstate.player1) {
+            currentUsername = tttstate.player1.username;
+        } else if (currentPlayerSlot === 'player2' && tttstate.player2) {
+            currentUsername = tttstate.player2.username;
+        }
+
+        if (!currentUsername) {
+            console.error('[CHAT] No username available');
+            alert('You must join a slot first');
+            return;
+        }
+
+        console.log('[CHAT] Sending message:', { roomId, userId, currentUsername, text });
+        const success = await sendChatMessage(roomId, userId, currentUsername, text);
+        if (!success) {
+            alert('Failed to send message');
+        }
+    };
+
     // Handle board cell click and send move to server
     const handleCellClick = (cellIndex: number) => {
         console.log('[CELL_CLICK] Cell clicked:', cellIndex);
@@ -401,6 +461,49 @@ export const TicTacToe: React.FC = () => {
         }
     };
 
+    // Handle replay game
+    const handleReplayGame = async () => {
+        if (!roomId || !socketState.isConnected) {
+            alert('Not connected to server');
+            return;
+        }
+
+        const userId = Cookies.get("userid");
+        if (!userId) {
+            alert('User not logged in');
+            return;
+        }
+
+        try {
+            const response = await fetch(`${SERVER_URL}${REPLAYROOM_API_ROUTE}/${roomId}`, {
+                method: "POST",
+                credentials: "include",
+                headers: {
+                    "Content-Type": "application/json"
+                }
+            });
+
+            const data = await response.json();
+
+            if (data?.type === "error") {
+                alert(`Failed to reset game: ${data.data}`);
+                return;
+            }
+
+            // Game reset successfully, update the local state
+            console.log('Game reset successfully');
+            setTttstate(prev => ({
+                ...prev,
+                board: "000000000",
+                turn: 1,
+                win: 0
+            }));
+        } catch (error) {
+            console.error('Error resetting game:', error);
+            alert('Error resetting game');
+        }
+    };
+
     // Cleanup: leave room on unmount
     useEffect(() => {
         return () => {
@@ -433,13 +536,13 @@ export const TicTacToe: React.FC = () => {
         name: "Opponent",
         isOnline: tttstate.player2 ? true : false,
     };
-    
-    const messages = [
-        { id: 1, from: "You", text: "Hey! Ready to play?", time: "21:03" },
-        { id: 2, from: "Alice", text: "Yep, good luck :)", time: "21:03" },
-        { id: 3, from: "You", text: "X goes first, right?", time: "21:04" },
-        { id: 4, from: "Alice", text: "Yeah, your move!", time: "21:04" },
-    ];
+
+    // Get current user's username
+    const currentUsername = currentPlayerSlot === 'player1' 
+        ? tttstate.player1?.username 
+        : currentPlayerSlot === 'player2' 
+        ? tttstate.player2?.username 
+        : '';
 
     return (
         <div className="ttt-page">
@@ -519,8 +622,8 @@ export const TicTacToe: React.FC = () => {
                                 margin: '10px',
                                 minHeight: '150px',
                                 backgroundColor: '#f9f9f9',
-                                cursor: currentPlayerSlot === 'player1' ? 'default' : 'pointer',
-                                opacity: currentPlayerSlot === 'player1' ? 0.7 : 1
+                                cursor: currentPlayerSlot === 'player1' || currentPlayerSlot === 'player2' ? 'not-allowed' : 'pointer',
+                                opacity: currentPlayerSlot === 'player1' || currentPlayerSlot === 'player2' ? 0.5 : 1
                             }}>
                                 <span style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '10px' }}>Slot 1 (X)</span>
                                 {currentPlayerSlot === 'player1' ? (
@@ -546,18 +649,18 @@ export const TicTacToe: React.FC = () => {
                                 ) : (
                                     <button
                                         onClick={() => handleJoinSlot('player1')}
-                                        disabled={isJoining || !socketState.isConnected}
+                                        disabled={isJoining || !socketState.isConnected || currentPlayerSlot === 'player2'}
                                         style={{
                                             padding: '10px 20px',
-                                            backgroundColor: '#4CAF50',
+                                            backgroundColor: currentPlayerSlot === 'player2' ? '#cccccc' : '#4CAF50',
                                             color: 'white',
                                             border: 'none',
                                             borderRadius: '4px',
-                                            cursor: isJoining || !socketState.isConnected ? 'not-allowed' : 'pointer',
-                                            opacity: isJoining || !socketState.isConnected ? 0.6 : 1
+                                            cursor: isJoining || !socketState.isConnected || currentPlayerSlot === 'player2' ? 'not-allowed' : 'pointer',
+                                            opacity: isJoining || !socketState.isConnected || currentPlayerSlot === 'player2' ? 0.6 : 1
                                         }}
                                     >
-                                        {isJoining ? 'Joining...' : 'Click to Join'}
+                                        {currentPlayerSlot === 'player2' ? 'Slot Locked' : isJoining ? 'Joining...' : 'Click to Join'}
                                     </button>
                                 )}
                             </div>
@@ -624,8 +727,8 @@ export const TicTacToe: React.FC = () => {
                                 margin: '10px',
                                 minHeight: '150px',
                                 backgroundColor: '#f9f9f9',
-                                cursor: currentPlayerSlot === 'player2' ? 'default' : 'pointer',
-                                opacity: currentPlayerSlot === 'player2' ? 0.7 : 1
+                                cursor: currentPlayerSlot === 'player1' || currentPlayerSlot === 'player2' ? 'not-allowed' : 'pointer',
+                                opacity: currentPlayerSlot === 'player1' || currentPlayerSlot === 'player2' ? 0.5 : 1
                             }}>
                                 <span style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '10px' }}>Slot 2 (O)</span>
                                 {currentPlayerSlot === 'player2' ? (
@@ -651,18 +754,18 @@ export const TicTacToe: React.FC = () => {
                                 ) : (
                                     <button
                                         onClick={() => handleJoinSlot('player2')}
-                                        disabled={isJoining || !socketState.isConnected}
+                                        disabled={isJoining || !socketState.isConnected || currentPlayerSlot === 'player1'}
                                         style={{
                                             padding: '10px 20px',
-                                            backgroundColor: '#2196F3',
+                                            backgroundColor: currentPlayerSlot === 'player1' ? '#cccccc' : '#2196F3',
                                             color: 'white',
                                             border: 'none',
                                             borderRadius: '4px',
-                                            cursor: isJoining || !socketState.isConnected ? 'not-allowed' : 'pointer',
-                                            opacity: isJoining || !socketState.isConnected ? 0.6 : 1
+                                            cursor: isJoining || !socketState.isConnected || currentPlayerSlot === 'player1' ? 'not-allowed' : 'pointer',
+                                            opacity: isJoining || !socketState.isConnected || currentPlayerSlot === 'player1' ? 0.6 : 1
                                         }}
                                     >
-                                        {isJoining ? 'Joining...' : 'Click to Join'}
+                                        {currentPlayerSlot === 'player1' ? 'Slot Locked' : isJoining ? 'Joining...' : 'Click to Join'}
                                     </button>
                                 )}
                             </div>
@@ -688,6 +791,45 @@ export const TicTacToe: React.FC = () => {
                         onCellClick={handleCellClick}
                     />
 
+                    {/* Replay button - show only if game is over and current user is the creator */}
+                    {tttstate.win !== 0 && currentPlayerSlot === 'player1' && (
+                        <div style={{
+                            display: 'flex',
+                            justifyContent: 'center',
+                            marginTop: '16px',
+                            gap: '10px'
+                        }}>
+                            <button
+                                onClick={handleReplayGame}
+                                disabled={!socketState.isConnected}
+                                style={{
+                                    padding: '10px 20px',
+                                    backgroundColor: '#2196F3',
+                                    color: 'white',
+                                    border: 'none',
+                                    borderRadius: '6px',
+                                    cursor: socketState.isConnected ? 'pointer' : 'not-allowed',
+                                    fontSize: '14px',
+                                    fontWeight: '600',
+                                    opacity: socketState.isConnected ? 1 : 0.6,
+                                    transition: 'all 0.3s ease',
+                                }}
+                                onMouseEnter={(e) => {
+                                    if (socketState.isConnected) {
+                                        e.currentTarget.style.backgroundColor = '#1976D2';
+                                        e.currentTarget.style.transform = 'translateY(-2px)';
+                                    }
+                                }}
+                                onMouseLeave={(e) => {
+                                    e.currentTarget.style.backgroundColor = '#2196F3';
+                                    e.currentTarget.style.transform = 'translateY(0)';
+                                }}
+                            >
+                                ↻ Replay Game
+                            </button>
+                        </div>
+                    )}
+
                     <div className="ttt-footer">
                         <span className="hint">Tip: X always starts. First to 3 in a row wins.</span>
                     </div>
@@ -697,7 +839,12 @@ export const TicTacToe: React.FC = () => {
                 <div className="ttt-right">
                     <OpponentStatus isOnline={opponent.isOnline} name={opponent.name} />
 
-                    <ChatPanel messages={messages} />
+                    <ChatPanel 
+                        messages={chatMessages}
+                        onSendMessage={handleSendChatMessage}
+                        disabled={!isPlayerJoined}
+                        currentUsername={currentUsername}
+                    />
                 </div>
             </div>
         </div>

@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import "../../styles/header-bar.css";
 import Cookies from "js-cookie";
 import { useNavigate } from "react-router-dom";
-import { SIGNUP_ROUTE } from "../../routeConfig";
+import { SIGNUP_ROUTE, DASHBOARD_ROUTE } from "../../routeConfig";
 
 export default function HeaderBar() {
     const [userid, setUserId] = useState<string | null>(null);
@@ -39,6 +39,8 @@ export default function HeaderBar() {
                     userid && username ? 
 
                     <><span className="username">Signed up as: <strong>{username}</strong></span>
+                    <button className="header-btn" 
+                    onClick={() => navigate(DASHBOARD_ROUTE)}>📊 Dashboard</button>
                     <button className="change-user-btn" 
                     onClick={() => navigateToSignup(true)}>Change User</button></>:
 

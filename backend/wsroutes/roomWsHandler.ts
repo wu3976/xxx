@@ -375,6 +375,49 @@ export function setupRoomHandlers(socket: Socket, io: SocketIOServer) {
     });
 
     /**
+     * Event: Send a chat message to the room
+     * Payload: { roomId: string, userId: string, username: string, text: string }
+     */
+    socket.on("room:chat:send", async (data) => {
+        try {
+            const { roomId, userId, username, text } = data;
+
+            // Validate input
+            if (!roomId || !userId || !username || !text) {
+                console.warn("[WARN] room:chat:send - missing required fields");
+                return;
+            }
+
+            if (text.trim().length === 0) {
+                console.warn("[WARN] room:chat:send - empty message");
+                return;
+            }
+
+            // Generate timestamp
+            const now = new Date();
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const time = `${hours}:${minutes}`;
+
+            // Broadcast message to all clients in the room
+            io.to(`room:${roomId}`).emit("room:chat:message", {
+                success: true,
+                data: {
+                    userId,
+                    username,
+                    text,
+                    time,
+                    timestamp: now.getTime(),
+                },
+            });
+
+            console.log(`[INFO] Chat message in room ${roomId} from ${username}: ${text}`);
+        } catch (err) {
+            console.error("[ERROR] room:chat:send handler error:", err);
+        }
+    });
+
+    /**
      * Event: Handle disconnection cleanup
      */
     socket.on("disconnect", async () => {

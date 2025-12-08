@@ -1,4 +1,4 @@
-import { createUser, getUserById, getUserByUsername } from "../mongodb/operations.ts";
+import { createUser, getAllUsers, getUserById, getUserByUsername } from "../mongodb/operations.ts";
 import { constructMidLayerError } from "../utils.ts";
 
 export async function getUserInfo(userId: string) {
@@ -35,4 +35,12 @@ export async function createTTTUser(username: String, password: String, email?: 
         ...(user.toJSON()),
         password: undefined
     };
+}
+
+export async function getAllTTTUsers() {
+    const users = await getAllUsers();
+    return users.map(user => ({
+        ...(user.toJSON()),
+        password: undefined
+    }));
 }

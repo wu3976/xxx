@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 import { createRoom, deleteRoomById, getRoomByCreater, getRoomById, getRoomByPlayer1, getRoomByPlayer2, getRoomsRangedChrono, getRoomsRangedChronoPopulated, getUserById } from "../mongodb/operations.ts";
 import { boardWinCondition } from "../algorithms/boardalgorithms.ts";
-import { WIN_STR_TO_NUM } from "../constants/playconstants.ts";
+import { WIN_STR_TO_NUM, EMPTY_BOARD } from "../constants/playconstants.ts";
 import { constructMidLayerError } from "../utils.ts";
 
 export async function createTTTGameRoom(name: string, createrId: string): Promise<any> {
@@ -25,6 +25,8 @@ export async function getTTTGameRoomsListInfo(skip: number, limit: number, oldes
             // @ts-ignore
             creater: ele.creater.username,
             // @ts-ignore
+            createrId: ele.creater._id,
+            // @ts-ignore
             player1: ele.player1?.username ?? null,
             // @ts-ignore
             player2: ele.player2?.username ?? null,
@@ -40,11 +42,15 @@ export async function getTTTGameRoom(roomId: string, userId: string): Promise<an
     return room;
 }
 
-export async function deleteTTTGameRoom(roomId: string): Promise<any> {
-    const deletedRoom = await deleteRoomById(roomId);
-    if (!deletedRoom) {
+export async function deleteTTTGameRoom(roomId: string, userId: string): Promise<any> {
+    const room = await getRoomById(roomId);
+    if (!room) {
         return constructMidLayerError("room_not_exist", `the room ${roomId} does not exist`);
     }
+    if (String(room.creater) !== userId) {
+        return constructMidLayerError("not_creator", `the user ${userId} is not the creator of room ${roomId}`);
+    }
+    const deletedRoom = await deleteRoomById(roomId);
     return deletedRoom;
 }
 
@@ -104,5 +110,67 @@ export async function TTTGameDoStep(roomId: string, userId: string, i: number) :
     const winCond = boardWinCondition(room.board);
     room.win = WIN_STR_TO_NUM[winCond];
     room.turn = room.turn === 1 ? 2 : 1;
+    const savedRoom = await room.save();
+    
+    // Update user stats if game is finished
+    if (savedRoom.win !== 0) {
+        await updateUserStatsAfterGame(savedRoom);
+    }
+    
+    return savedRoom;
+}
+
+export async function updateUserStatsAfterGame(room: any): Promise<void> {
+    try {
+        const [player1, player2] = await Promise.all([
+            getUserById(String(room.player1)),
+            getUserById(String(room.player2))
+        ]);
+
+        if (!player1 || !player2) {
+            console.error("Could not find players to update stats");
+            return;
+        }
+
+        const win = room.win;
+        // 0: ongoing, 1: player1 (X) wins, 2: player2 (O) wins, 3: draw
+
+        if (win === 1) {
+            // Player 1 wins
+            player1.wincount = (player1.wincount || 0) + 1;
+            player2.losscount = (player2.losscount || 0) + 1;
+        } else if (win === 2) {
+            // Player 2 wins
+            player2.wincount = (player2.wincount || 0) + 1;
+            player1.losscount = (player1.losscount || 0) + 1;
+        } else if (win === 3) {
+            // Draw
+            player1.drawcount = (player1.drawcount || 0) + 1;
+            player2.drawcount = (player2.drawcount || 0) + 1;
+        }
+
+        await Promise.all([player1.save(), player2.save()]);
+        console.log("User stats updated after game completion");
+    } catch (error) {
+        console.error("Error updating user stats:", error);
+    }
+}
+
+export async function resetTTTGameRoom(roomId: string, userId: string): Promise<any> {
+    const room = await getRoomById(roomId);
+    if (!room) {
+        return constructMidLayerError("room_not_exist", `the room ${roomId} does not exist`);
+    }
+    
+    // Only the room creator can reset the game
+    if (String(room.creater) !== userId) {
+        return constructMidLayerError("not_creator", `only the room creator can reset the game`);
+    }
+    
+    // Reset the board and game state
+    room.board = EMPTY_BOARD;
+    room.turn = 1;
+    room.win = 0;
+    
     return await room.save();
 }
